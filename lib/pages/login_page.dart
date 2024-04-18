@@ -2,53 +2,78 @@ import 'package:flutter/material.dart';
 import 'package:travel_buddy/components/my_button.dart';
 import 'package:travel_buddy/components/my_textfield.dart';
 import 'package:travel_buddy/components/square_tile.dart';
+import 'package:travel_buddy/pages/home_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
-  final usernameController = TextEditingController();
-  final passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  // how to sign users in
-  void signUserIn() {}
+  static const String demoUsername = 'Adam Farghaly';
+  static const String demoPassword = 'demo';
+
+  void demoLogin(BuildContext context) {
+    String enteredUsername = usernameController.text;
+    String enteredPassword = passwordController.text;
+
+    if (enteredUsername == demoUsername && enteredPassword == demoPassword) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => HomePage(username: enteredUsername)),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Invalid username or password.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.grey,
-        body: SafeArea(
-          child: Center(
+      backgroundColor: Colors.grey,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 50),
-                // logo
-                const Icon(Icons.airplanemode_active,
-                    size: 100, color: Colors.white),
+                Image.asset(
+                  'lib/images/home_screen.png',
+                  width: 140,
+                  height: 140,
+                ),
                 const SizedBox(height: 50),
-                // text instead of welcome back if i wanted to swap out the text
-                const Text('Welcome back, you\'ve been missed!',
-                    style: TextStyle(color: Colors.white, fontSize: 20)),
+                const Text(
+                  'Welcome back to Travel Buddy!',
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
                 const SizedBox(height: 25),
-
-                //username textfield
                 MyTextField(
                   controller: usernameController,
                   hintText: 'Username',
                   obscureText: false,
                 ),
-
                 const SizedBox(height: 10),
-
-                //password textfield
                 MyTextField(
                   controller: passwordController,
                   hintText: 'Password',
                   obscureText: true,
                 ),
                 const SizedBox(height: 10),
-
-                //forgot password
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -62,14 +87,10 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 25),
-
-                //login button
                 MyButton(
-                  onTap: signUserIn,
+                  onTap: () => demoLogin(context),
                 ),
                 const SizedBox(height: 50),
-
-                // or continue with
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -97,8 +118,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 50),
-
-                //good + apple sign in buttons
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -108,8 +127,6 @@ class LoginPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 50),
-
-                //not a memember? register now
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -119,14 +136,17 @@ class LoginPage extends StatelessWidget {
                     Text(
                       'Register now',
                       style: TextStyle(
-                          color: Color.fromARGB(255, 2, 125, 226),
-                          fontWeight: FontWeight.bold),
+                        color: Color.fromARGB(255, 2, 125, 226),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 )
               ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
