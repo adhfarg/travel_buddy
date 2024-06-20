@@ -14,6 +14,8 @@ Homepage: Upon logging in, you'll be directed to the homepage where you'll find 
 
 Search Functionality: Easily search for different locations within the NYC area to find the best hotels and restaurants tailored to your preferences.
 
+Detailed Place Information: Click on any listed place to view detailed information, including contact details, address, and opening hours.
+
 Logout Option: When you're done exploring or need to take a break, simply log out of your account with ease.
 
 # How to Use:
@@ -23,6 +25,8 @@ Login or Sign Up: Start by logging in with your username and password, or choose
 Explore the Homepage: Once logged in, explore the homepage to discover oncoming data for the NYC Manhattan area, including hotels and restaurants.
 
 Search for Locations: Use the search functionality to find specific locations within the NYC area.
+
+View Details: Click on any hotel or restaurant to view detailed information about the location, including contact details, address, and opening hours.
 
 Logout: When you're finished using the app, logout from your account to ensure your privacy and security.
 
