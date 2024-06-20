@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:travel_buddy/pages/place_details.dart'; // Update the import path accordingly
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -23,7 +24,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchPlaces([String query = '']) async {
-    final apiKey = 'AIzaSyCPEYL_zXOnnuIZjqv1bi7xL7OGNfEjha0';
+    final apiKey =
+        'AIzaSyB-xnND_MGHozbAkRMRoZ4PVq6CXde_cC0'; // Replace with your actual API key
     final location = '40.7128,-74.0060'; // Example location (New York City)
     final radius = '1000'; // Example radius in meters
 
@@ -46,6 +48,7 @@ class _HomePageState extends State<HomePage> {
         hotels = [];
         for (var result in results) {
           final name = result['name'];
+          final placeId = result['place_id'];
           final types = result['types'];
           final photoReference = result['photos'] != null
               ? result['photos'][0]['photo_reference']
@@ -55,9 +58,11 @@ class _HomePageState extends State<HomePage> {
               : null;
 
           if (types != null && types.contains('restaurant')) {
-            restaurants.add({'name': name, 'photoUrl': photoUrl});
+            restaurants
+                .add({'name': name, 'photoUrl': photoUrl, 'placeId': placeId});
           } else if (types != null && types.contains('lodging')) {
-            hotels.add({'name': name, 'photoUrl': photoUrl});
+            hotels
+                .add({'name': name, 'photoUrl': photoUrl, 'placeId': placeId});
           }
         }
       });
@@ -162,6 +167,14 @@ class _HomePageState extends State<HomePage> {
                   width: 50, height: 50, fit: BoxFit.cover)
               : null,
           title: Text(place['name'] ?? 'No name'),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PlaceDetails(placeId: place['placeId']!),
+              ),
+            );
+          },
         );
       },
     );
@@ -198,9 +211,8 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     fetchPlaces(query);
-    return Center(
-      child: CircularProgressIndicator(),
-    );
+    close(context, null);
+    return Container();
   }
 
   @override
