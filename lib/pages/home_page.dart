@@ -12,7 +12,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late List<String> places = [];
+  List<Map<String, String?>> restaurants = [];
+  List<Map<String, String?>> hotels = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -20,20 +22,44 @@ class _HomePageState extends State<HomePage> {
     fetchPlaces();
   }
 
-  Future<void> fetchPlaces() async {
+  Future<void> fetchPlaces([String query = '']) async {
     final apiKey = 'AIzaSyCPEYL_zXOnnuIZjqv1bi7xL7OGNfEjha0';
+    final location = '40.7128,-74.0060'; // Example location (New York City)
+    final radius = '1000'; // Example radius in meters
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=40.7128,-74.0060&radius=1000&type=restaurant&key=$apiKey';
+    String url;
+    if (query.isEmpty) {
+      url =
+          'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$location&radius=$radius&type=restaurant|lodging&key=$apiKey';
+    } else {
+      url =
+          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&key=$apiKey';
+    }
 
     try {
       final response = await http.get(Uri.parse(url));
       final data = json.decode(response.body);
       final results = data['results'];
+
       setState(() {
-        places = List.generate(results.length, (index) {
-          return results[index]['name'];
-        });
+        restaurants = [];
+        hotels = [];
+        for (var result in results) {
+          final name = result['name'];
+          final types = result['types'];
+          final photoReference = result['photos'] != null
+              ? result['photos'][0]['photo_reference']
+              : null;
+          final photoUrl = photoReference != null
+              ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKey'
+              : null;
+
+          if (types != null && types.contains('restaurant')) {
+            restaurants.add({'name': name, 'photoUrl': photoUrl});
+          } else if (types != null && types.contains('lodging')) {
+            hotels.add({'name': name, 'photoUrl': photoUrl});
+          }
+        }
       });
     } catch (error) {
       print('Error fetching places: $error');
@@ -46,47 +72,49 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Welcome, ${widget.username}'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Profile Section
-          Container(
-            padding: EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: AssetImage('assets/profile_image.jpg'),
-                  radius: 30,
-                ),
-                SizedBox(width: 16.0),
-                Text('Welcome, ${widget.username}'),
-                Spacer(),
-                IconButton(
-                  icon: Icon(Icons.notifications),
-                  onPressed: () {},
-                ),
-              ],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Section
+            Container(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: AssetImage('assets/profile_image.jpg'),
+                    radius: 30,
+                  ),
+                  SizedBox(width: 16.0),
+                  Text('Welcome, ${widget.username}'),
+                  Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.notifications),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Nearby Places Section
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Nearby Places:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // Nearby Restaurants Section
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Nearby Restaurants:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: places.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(places[index]),
-                );
-              },
+            _buildPlacesList(restaurants),
+            // Nearby Hotels Section
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Nearby Hotels:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-        ],
+            _buildPlacesList(hotels),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
@@ -98,7 +126,15 @@ class _HomePageState extends State<HomePage> {
             ),
             IconButton(
               icon: Icon(Icons.search),
-              onPressed: () {},
+              onPressed: () async {
+                final result = await showSearch(
+                  context: context,
+                  delegate: CustomSearchDelegate(fetchPlaces: fetchPlaces),
+                );
+                if (result != null) {
+                  fetchPlaces(result);
+                }
+              },
             ),
             IconButton(
               icon: Icon(Icons.logout),
@@ -111,5 +147,64 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Widget _buildPlacesList(List<Map<String, String?>> places) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: places.length,
+      itemBuilder: (context, index) {
+        final place = places[index];
+        return ListTile(
+          leading: place['photoUrl'] != null
+              ? Image.network(place['photoUrl']!,
+                  width: 50, height: 50, fit: BoxFit.cover)
+              : null,
+          title: Text(place['name'] ?? 'No name'),
+        );
+      },
+    );
+  }
+}
+
+class CustomSearchDelegate extends SearchDelegate {
+  final Function fetchPlaces;
+
+  CustomSearchDelegate({required this.fetchPlaces});
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    fetchPlaces(query);
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return Container();
   }
 }
