@@ -53,7 +53,7 @@ class _PlaceDetailsState extends State<PlaceDetails> {
       appBar: AppBar(
         title: Text(placeDetails!['name']),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,9 +76,70 @@ class _PlaceDetailsState extends State<PlaceDetails> {
               ...placeDetails!['opening_hours']['weekday_text']
                   .map<Widget>((day) => Text(day))
                   .toList(),
+            SizedBox(height: 16.0),
+            if (placeDetails!['rating'] != null)
+              Row(
+                children: [
+                  Text(
+                    'Average Rating: ${placeDetails!['rating']}',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(width: 8.0),
+                  Row(
+                    children: List.generate(5, (i) {
+                      return Icon(
+                        i < placeDetails!['rating']
+                            ? Icons.star
+                            : Icons.star_border,
+                        color: Colors.amber,
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            SizedBox(height: 16.0),
+            if (placeDetails!['reviews'] != null) ...[
+              Text(
+                'Reviews:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              _buildReviewsList(placeDetails!['reviews']),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildReviewsList(List reviews) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: reviews.length,
+      itemBuilder: (context, index) {
+        final review = reviews[index];
+        return ListTile(
+          title: Text(review['author_name'] ?? 'Anonymous'),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: List.generate(5, (i) {
+                  return Icon(
+                    i < review['rating'] ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                  );
+                }),
+              ),
+              Text(review['text'] ?? 'No review text'),
+            ],
+          ),
+          leading: CircleAvatar(
+            backgroundImage: NetworkImage(review['profile_photo_url'] ??
+                'https://via.placeholder.com/50'),
+          ),
+        );
+      },
     );
   }
 }

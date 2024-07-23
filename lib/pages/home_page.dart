@@ -14,7 +14,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Map<String, String?>> restaurants = [];
-  List<Map<String, String?>> hotels = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -32,20 +31,23 @@ class _HomePageState extends State<HomePage> {
     String url;
     if (query.isEmpty) {
       url =
-          'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$location&radius=$radius&type=restaurant|lodging&key=$apiKey';
+          'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$location&radius=$radius&type=restaurant&key=$apiKey';
     } else {
       url =
-          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=$radius&key=$apiKey';
+          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=$radius&type=restaurant&key=$apiKey';
     }
 
     try {
       final response = await http.get(Uri.parse(url));
       final data = json.decode(response.body);
+
+      // Debugging: print the full response
+      print('API Response: $data');
+
       final results = data['results'];
 
       setState(() {
         restaurants = [];
-        hotels = [];
         for (var result in results) {
           final name = result['name'];
           final placeId = result['place_id'];
@@ -57,14 +59,17 @@ class _HomePageState extends State<HomePage> {
               ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKey'
               : null;
 
+          // Debugging: print the type of each place
+          print('Place: $name, Types: $types');
+
           if (types != null && types.contains('restaurant')) {
             restaurants
                 .add({'name': name, 'photoUrl': photoUrl, 'placeId': placeId});
-          } else if (types != null && types.contains('lodging')) {
-            hotels
-                .add({'name': name, 'photoUrl': photoUrl, 'placeId': placeId});
           }
         }
+
+        // Debugging: print the list of restaurants
+        print('Restaurants: $restaurants');
       });
     } catch (error) {
       print('Error fetching places: $error');
@@ -123,15 +128,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             _buildPlacesList(restaurants),
-            // Nearby Hotels Section
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Nearby Hotels:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            _buildPlacesList(hotels),
           ],
         ),
       ),
@@ -183,6 +179,14 @@ class _HomePageState extends State<HomePage> {
                   width: 50, height: 50, fit: BoxFit.cover)
               : null,
           title: Text(place['name'] ?? 'No name'),
+          subtitle: place['rating'] != null
+              ? Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber),
+                    Text('${place['rating']}')
+                  ],
+                )
+              : null,
           onTap: () {
             Navigator.push(
               context,
@@ -211,7 +215,7 @@ class CustomSearchDelegate extends SearchDelegate {
     final radius = '1000'; // Example radius in meters
 
     final url =
-        'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=$radius&type=restaurant|lodging&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=$radius&type=restaurant&key=$apiKey';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -234,7 +238,8 @@ class CustomSearchDelegate extends SearchDelegate {
           'name': name,
           'photoUrl': photoUrl,
           'placeId': placeId,
-          'types': types.join(', ')
+          'types': types.join(', '),
+          'rating': result['rating']?.toString() ?? 'No rating'
         });
       }
     } catch (error) {
@@ -249,6 +254,7 @@ class CustomSearchDelegate extends SearchDelegate {
         icon: Icon(Icons.clear),
         onPressed: () {
           query = '';
+          showSuggestions(context);
         },
       ),
     ];
@@ -292,7 +298,14 @@ class CustomSearchDelegate extends SearchDelegate {
                   width: 50, height: 50, fit: BoxFit.cover)
               : null,
           title: Text(suggestion['name'] ?? 'No name'),
-          subtitle: Text(suggestion['types'] ?? 'No type'),
+          subtitle: suggestion['rating'] != null
+              ? Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber),
+                    Text('${suggestion['rating']}')
+                  ],
+                )
+              : null,
           onTap: () {
             close(context, suggestion['name']);
             WidgetsBinding.instance.addPostFrameCallback((_) {
