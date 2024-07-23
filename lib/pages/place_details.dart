@@ -13,8 +13,7 @@ class PlaceDetails extends StatefulWidget {
 
 class _PlaceDetailsState extends State<PlaceDetails> {
   Map<String, dynamic>? placeDetails;
-  final String apiKey =
-      'AIzaSyB-xnND_MGHozbAkRMRoZ4PVq6CXde_cC0'; // Replace with your actual API key
+  final String apiKey = 'AIzaSyB-xnND_MGHozbAkRMRoZ4PVq6CXde_cC0';
 
   @override
   void initState() {
