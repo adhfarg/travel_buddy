@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,15 +7,15 @@ import 'package:travel_buddy/pages/place_details.dart';
 class HomePage extends StatefulWidget {
   final String username;
 
-  const HomePage({Key? key, required this.username}) : super(key: key);
+  const HomePage({super.key, required this.username});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   List<Map<String, String?>> restaurants = [];
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -23,10 +24,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchPlaces([String query = '']) async {
-    final apiKey =
+    const apiKey =
         'AIzaSyB-xnND_MGHozbAkRMRoZ4PVq6CXde_cC0'; // Replace with your actual API key
-    final location = '40.7128,-74.0060'; // New York City location
-    final radius = '1000'; // Example radius in meters
+    const location = '40.7128,-74.0060'; // New York City location
+    const radius = '1000'; // Example radius in meters
 
     String url;
     if (query.isEmpty) {
@@ -42,7 +43,9 @@ class _HomePageState extends State<HomePage> {
       final data = json.decode(response.body);
 
       // Debugging: print the full response
-      print('API Response: $data');
+      if (kDebugMode) {
+        print('API Response: $data');
+      }
 
       final results = data['results'];
 
@@ -60,7 +63,9 @@ class _HomePageState extends State<HomePage> {
               : null;
 
           // Debugging: print the type of each place
-          print('Place: $name, Types: $types');
+          if (kDebugMode) {
+            print('Place: $name, Types: $types');
+          }
 
           if (types != null && types.contains('restaurant')) {
             restaurants
@@ -69,10 +74,14 @@ class _HomePageState extends State<HomePage> {
         }
 
         // Debugging: print the list of restaurants
-        print('Restaurants: $restaurants');
+        if (kDebugMode) {
+          print('Restaurants: $restaurants');
+        }
       });
     } catch (error) {
-      print('Error fetching places: $error');
+      if (kDebugMode) {
+        print('Error fetching places: $error');
+      }
     }
   }
 
@@ -83,7 +92,7 @@ class _HomePageState extends State<HomePage> {
         title: Text('Welcome, ${widget.username}'),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () async {
               final result = await showSearch(
                 context: context,
@@ -102,26 +111,32 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Profile Section
             Container(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     backgroundImage: AssetImage('lib/images/profile.png'),
                     radius: 30,
                   ),
-                  SizedBox(width: 16.0),
+                  const SizedBox(width: 16.0),
                   Text('Welcome, ${widget.username}'),
-                  Spacer(),
+                  const Spacer(),
                   IconButton(
-                    icon: Icon(Icons.notifications),
-                    onPressed: () {},
+                    icon: const Icon(Icons.notifications),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Notification clicked!'),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
             // Nearby Restaurants Section
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
               child: Text(
                 'Nearby Restaurants:',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -136,13 +151,13 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onPressed: () async {
                 fetchPlaces();
               },
             ),
             IconButton(
-              icon: Icon(Icons.search),
+              icon: const Icon(Icons.search),
               onPressed: () async {
                 final result = await showSearch(
                   context: context,
@@ -154,7 +169,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             IconButton(
-              icon: Icon(Icons.logout),
+              icon: const Icon(Icons.logout),
               onPressed: () {
                 Navigator.pushNamedAndRemoveUntil(
                     context, '/login', (route) => false);
@@ -169,7 +184,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildPlacesList(List<Map<String, String?>> places) {
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: places.length,
       itemBuilder: (context, index) {
         final place = places[index];
@@ -182,7 +197,7 @@ class _HomePageState extends State<HomePage> {
           subtitle: place['rating'] != null
               ? Row(
                   children: [
-                    Icon(Icons.star, color: Colors.amber),
+                    const Icon(Icons.star, color: Colors.amber),
                     Text('${place['rating']}')
                   ],
                 )
@@ -209,10 +224,10 @@ class CustomSearchDelegate extends SearchDelegate {
   List<Map<String, String?>> _suggestions = [];
 
   Future<void> _fetchSuggestions(String query) async {
-    final apiKey =
+    const apiKey =
         'AIzaSyB-xnND_MGHozbAkRMRoZ4PVq6CXde_cC0'; // Replace with your actual API key
-    final location = '40.7128,-74.0060'; // New York City location
-    final radius = '1000'; // Example radius in meters
+    const location = '40.7128,-74.0060'; // New York City location
+    const radius = '1000'; // Example radius in meters
 
     final url =
         'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=$radius&type=restaurant&key=$apiKey';
@@ -243,7 +258,9 @@ class CustomSearchDelegate extends SearchDelegate {
         });
       }
     } catch (error) {
-      print('Error fetching suggestions: $error');
+      if (kDebugMode) {
+        print('Error fetching suggestions: $error');
+      }
     }
   }
 
@@ -251,7 +268,7 @@ class CustomSearchDelegate extends SearchDelegate {
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
           showSuggestions(context);
@@ -263,7 +280,7 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back),
       onPressed: () {
         close(context, null);
       },
@@ -275,7 +292,7 @@ class CustomSearchDelegate extends SearchDelegate {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchPlaces(query);
     });
-    return Center(
+    return const Center(
       child: CircularProgressIndicator(),
     );
   }
@@ -301,7 +318,7 @@ class CustomSearchDelegate extends SearchDelegate {
           subtitle: suggestion['rating'] != null
               ? Row(
                   children: [
-                    Icon(Icons.star, color: Colors.amber),
+                    const Icon(Icons.star, color: Colors.amber),
                     Text('${suggestion['rating']}')
                   ],
                 )
